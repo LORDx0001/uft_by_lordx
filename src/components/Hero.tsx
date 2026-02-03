@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { apiRequest } from "../../api/apiRequest";
 import toast from "react-hot-toast";
 import HeroAnimation from "./HeroAnimation";
-import Hero3DModel from "./Hero3DModel";
+import HeroUFTAnimation from "./HeroUFTAnimation";
 import Skeleton from "./Skeleton";
 
 type BannerType = {
@@ -105,10 +105,10 @@ const Hero = () => {
       {/* Hero Animation Background */}
       <HeroAnimation />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 flex flex-col md:flex-row items-center justify-center md:justify-between gap-8 md:gap-12 min-h-[calc(100vh-80px)] md:min-h-0">
-        <div className="flex flex-col text-left md:text-left max-w-2xl pb-10 md:pb-0 relative z-20 w-full animate-fade-in-up">
+      <div className="relative z-10 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-4 min-h-[calc(100vh-80px)] md:min-h-0">
+        <div className="flex flex-col text-left md:text-left max-w-2xl pb-10 md:pb-0 relative z-20 w-full md:w-1/3 md:ml-20 animate-fade-in-up">
           <h1 className="font-bold text-white mb-6 leading-tight"
-            style={{ fontSize: 'clamp(2.5rem, 6vw + 1rem, 5rem)' }}>
+            style={{ fontSize: 'clamp(2rem, 5vw + 1rem, 4rem)' }}>
             <span
               className="block font-montserrat animate-slide-in-left"
               style={{ animationDelay: "0.2s" }}
@@ -162,9 +162,10 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* 3D Model Section - Hidden on mobile */}
-        <div className="hidden md:flex md:w-1/2 justify-center items-center animate-fade-in-up z-10 pointer-events-none md:pointer-events-auto" style={{ animationDelay: "0.4s" }}>
-          <Hero3DModel />
+        <div className="hidden md:flex md:w-2/3 justify-end items-center animate-fade-in-up z-10 pointer-events-none md:pointer-events-auto -mr-20" style={{ animationDelay: "0.4s" }}>
+          <div className="w-full h-[600px]">
+            <HeroUFTAnimation />
+          </div>
         </div>
       </div>
       <style>{`

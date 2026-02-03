@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UFT Monochrome Constellation</title>
+    <style>
+        body { 
+            margin: 0; 
+            background: #000; /* Absolute Black */
+            overflow: hidden; 
+            touch-action: none;
+        }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <canvas id="flowCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('flowCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles = [], textPoints = [];
+        let mouse = { x: -1000, y: -1000, radius: 150 };
+
+        function setup() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const tempCanvas = document.createElement('canvas');
+            const tctx = tempCanvas.getContext('2d');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            
+            tctx.fillStyle = 'white';
+            tctx.textAlign = 'center';
+            tctx.textBaseline = 'middle';
+            tctx.font = `bold ${Math.min(width, height) * 0.5}px Impact, sans-serif`;
+            tctx.fillText('UFT', width / 2, height / 2);
+
+            const imgData = tctx.getImageData(0, 0, width, height).data;
+            textPoints = [];
+            for (let y = 0; y < height; y += 5) { // Sample points for connection logic
+                for (let x = 0; x < width; x += 5) {
+                    if (imgData[(y * width + x) * 4 + 3] > 128) {
+                        textPoints.push({ x, y });
+                    }
+                }
+            }
+
+            particles = [];
+            for (let i = 0; i < textPoints.length; i++) {
+                particles.push(new Particle(textPoints[i]));
+            }
+        }
+
+        class Particle {
+            constructor(point) {
+                this.originX = point.x;
+                this.originY = point.y;
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = 0;
+                this.vy = 0;
+                this.ease = 0.04;
+                this.friction = 0.88;
+            }
+
+            update() {
+                let dx = this.originX - this.x;
+                let dy = this.originY - this.y;
+                this.vx += dx * this.ease;
+                this.vy += dy * this.ease;
+
+                let mdx = mouse.x - this.x;
+                let mdy = mouse.y - this.y;
+                let mDist = Math.sqrt(mdx * mdx + mdy * mdy);
+                
+                if (mDist < mouse.radius) {
+                    let force = (mouse.radius - mDist) / mouse.radius;
+                    let angle = Math.atan2(mdy, mdx);
+                    this.vx -= Math.cos(angle) * force * 40;
+                    this.vy -= Math.sin(angle) * force * 40;
+                }
+
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+
+            draw() {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(this.x, this.y, 2, 2);
+            }
+        }
+
+        function animate() {
+            // Pure Black clear every frame for maximum contrast
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Draw lines between nearby particles for the "Constellation" look
+                for (let j = i + 1; j < i + 5; j++) { // Only check next few for performance
+                    if (particles[j]) {
+                        let dx = particles[i].x - particles[j].x;
+                        let dy = particles[i].y - particles[j].y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 30) {
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist / 30})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        const move = (e) => {
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            mouse.x = clientX;
+            mouse.y = clientY;
+        };
+
+        window.addEventListener('mousemove', move);
+        window.addEventListener('touchmove', move);
+        window.addEventListener('resize', setup);
+        
+        setup();
+        animate();
+    </script>
+</body>
+</html>

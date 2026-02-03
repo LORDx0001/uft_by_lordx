@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import logo from '../../assets/logo_loader.png';
 
-const Loading = () => {
+const Loading = ({ fadingOut = false }: { fadingOut?: boolean }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
@@ -92,7 +92,7 @@ const Loading = () => {
     }, []);
 
     return (
-        <div className="relative w-full h-screen overflow-hidden bg-black flex items-center justify-center">
+        <div className={`fixed inset-0 z-[9999] w-full h-screen overflow-hidden bg-black flex items-center justify-center transition-all duration-1000 ease-in-out ${fadingOut ? 'opacity-0 scale-110 pointer-events-none' : 'opacity-100 scale-100'}`}>
             <canvas
                 ref={canvasRef}
                 className="absolute inset-0 w-full h-full"
