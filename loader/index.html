@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Monochrome Warp Drive</title>
+    <style>
+        body {
+            margin: 0;
+            background: #000;
+            /* Pure Black */
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="warpCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('warpCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, stars = [];
+        const starCount = 1000; // Increased for density
+        let speed = 0.02;
+
+        function init() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            stars = [];
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * width - width / 2,
+                    y: Math.random() * height - height / 2,
+                    z: Math.random() * width,
+                    pz: 0 // Previous Z position for the streak effect
+                });
+            }
+        }
+
+        function draw() {
+            // Keep the background deep black
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, width, height);
+
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            for (let i = 0; i < starCount; i++) {
+                let s = stars[i];
+
+                s.pz = s.z; // Store old Z
+                s.z -= speed * 400; // Move forward
+
+                if (s.z <= 0) {
+                    s.z = width;
+                    s.pz = s.z;
+                    s.x = Math.random() * width - width / 2;
+                    s.y = Math.random() * height - height / 2;
+                }
+
+                // Project current 3D to 2D
+                const x = (s.x / s.z) * width + centerX;
+                const y = (s.y / s.z) * width + centerY;
+
+                // Project previous 3D to 2D to create the streak
+                const px = (s.x / s.pz) * width + centerX;
+                const py = (s.y / s.pz) * width + centerY;
+
+                // Set color to White with distance-based opacity
+                const opacity = 1 - s.z / width;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.lineWidth = opacity * 3;
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(px, py);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        // Interactivity: Speed up on click
+        window.addEventListener('mousedown', () => speed = 0.08);
+        window.addEventListener('mouseup', () => speed = 0.02);
+        window.addEventListener('resize', init);
+
+        init();
+        draw();
+    </script>
+</body>
+
+</html>
