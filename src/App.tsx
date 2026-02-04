@@ -12,6 +12,8 @@ import "aos/dist/aos.css";
 import Portfolio from "./pages/Portfolio.tsx";
 import { AboutUs } from "./pages/AboutUs.tsx";
 import PageNotFound from "./components/PageNotFound.tsx";
+import { GraphicsProvider } from "./contexts/GraphicsContext.tsx";
+import SettingsModal from "./components/SettingsModal.tsx";
 
 AOS.init();
 
@@ -82,7 +84,7 @@ function App() {
   }, [loading]);
 
   return (
-    <>
+    <GraphicsProvider>
       {loading && <Loading fadingOut={fadingOut} />}
       <Router>
         <div className="">
@@ -95,9 +97,10 @@ function App() {
             <Route path="*" element={<PageNotFound />} />
           </Routes>
           <Footer />
+          <SettingsModal />
         </div>
       </Router>
-    </>
+    </GraphicsProvider>
   );
 }
 

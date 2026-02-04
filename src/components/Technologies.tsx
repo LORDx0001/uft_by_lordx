@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { HoverEffect } from "./card-hover-effects/card-hover-effects";
 import { apiRequest } from "../../api/apiRequest";
 import Skeleton from "./Skeleton";
+import { useGraphics } from "../contexts/GraphicsContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,6 +25,7 @@ const Technologies = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [technologies, setTechnologies] = useState<Technologies | null>(null);
+  const { quality } = useGraphics();
 
   useEffect(() => {
     apiRequest("get", "/tools/")
@@ -127,7 +129,9 @@ const Technologies = () => {
 
     const init = () => {
       particles = [];
-      const numberOfParticles = (canvas.width * canvas.height) / 10000;
+      // Quality-based particle density
+      const densityMultiplier = quality === 'low' ? 0.3 : quality === 'medium' ? 0.6 : 1;
+      const numberOfParticles = Math.floor((canvas.width * canvas.height) / 10000 * densityMultiplier);
       for (let i = 0; i < numberOfParticles; i++) {
         let x = Math.random() * canvas.width;
         let y = Math.random() * canvas.height;
@@ -149,8 +153,13 @@ const Technologies = () => {
     const connect = () => {
       if (!ctx) return;
       ctx.shadowBlur = 0;
+
+      // Quality-based connection optimization
+      const maxConnections = quality === 'low' ? 2 : quality === 'medium' ? 3 : 5;
+
       for (let a = 0; a < particles.length; a++) {
-        for (let b = a; b < particles.length; b++) {
+        let connections = 0;
+        for (let b = a + 1; b < particles.length && connections < maxConnections; b++) {
           let dx = particles[a].x - particles[b].x;
           let dy = particles[a].y - particles[b].y;
           let distance = Math.sqrt(dx * dx + dy * dy);
@@ -163,6 +172,7 @@ const Technologies = () => {
             ctx.moveTo(particles[a].x, particles[a].y);
             ctx.lineTo(particles[b].x, particles[b].y);
             ctx.stroke();
+            connections++;
           }
         }
       }
@@ -200,7 +210,7 @@ const Technologies = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("touchmove", handleTouchMove);
     };
-  }, []);
+  }, [quality]);
 
   return (
     <section

@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
 import logo from '../../assets/logo_loader.png';
+import { useGraphics } from '../contexts/GraphicsContext';
 
 const Loading = ({ fadingOut = false }: { fadingOut?: boolean }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { quality } = useGraphics();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -15,8 +17,10 @@ const Loading = ({ fadingOut = false }: { fadingOut?: boolean }) => {
         let width = window.innerWidth;
         let height = window.innerHeight;
         let stars: { x: number; y: number; z: number; pz: number }[] = [];
-        const starCount = 1200; // Increased density for smoothness
-        const speed = 0.08; // High speed by default as requested
+
+        // Quality-based star count (minimal for smooth performance)
+        const starCount = quality === 'low' ? 100 : quality === 'medium' ? 200 : 300;
+        const speed = 0.08;
 
         const init = () => {
             width = window.innerWidth;
@@ -42,6 +46,8 @@ const Loading = ({ fadingOut = false }: { fadingOut?: boolean }) => {
             const centerX = width / 2;
             const centerY = height / 2;
 
+            ctx.lineCap = 'round';
+
             for (let i = 0; i < starCount; i++) {
                 let s = stars[i];
 
@@ -65,8 +71,7 @@ const Loading = ({ fadingOut = false }: { fadingOut?: boolean }) => {
 
                 const opacity = 1 - s.z / width;
                 ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
-                ctx.lineWidth = opacity * 2.5; // Slightly finer lines for smoothness
-                ctx.lineCap = 'round';
+                ctx.lineWidth = opacity * 2;
 
                 ctx.beginPath();
                 ctx.moveTo(px, py);
@@ -89,7 +94,7 @@ const Loading = ({ fadingOut = false }: { fadingOut?: boolean }) => {
             window.removeEventListener('resize', handleResize);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [quality]);
 
     return (
         <div className={`fixed inset-0 z-[9999] w-full h-screen overflow-hidden bg-black flex items-center justify-center transition-all duration-1000 ease-in-out ${fadingOut ? 'opacity-0 scale-110 pointer-events-none' : 'opacity-100 scale-100'}`}>

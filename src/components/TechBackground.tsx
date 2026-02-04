@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import { useGraphics } from '../contexts/GraphicsContext';
 
 const TechBackground: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { quality } = useGraphics();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -13,7 +15,9 @@ const TechBackground: React.FC = () => {
         let animationFrameId: number;
         let particles: Particle[] = [];
         let hexNodes: HexNode[] = [];
-        const particleCount = 70;
+
+        // Quality-based particle count
+        const particleCount = quality === 'low' ? 30 : quality === 'medium' ? 50 : 70;
         const connectionDistance = 180;
         const mouse = { x: -1000, y: -1000, radius: 250, active: false };
 
@@ -217,7 +221,7 @@ const TechBackground: React.FC = () => {
             window.removeEventListener('touchend', handleStop);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [quality]);
 
     return (
         <canvas

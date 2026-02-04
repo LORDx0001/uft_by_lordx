@@ -1,7 +1,13 @@
 import React, { useEffect, useRef } from 'react';
+import { useGraphics } from '../contexts/GraphicsContext';
 
-const HeroUFTAnimation: React.FC = () => {
+interface HeroUFTAnimationProps {
+    imageSrc: string;
+}
+
+const HeroUFTAnimation: React.FC<HeroUFTAnimationProps> = ({ imageSrc }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { quality } = useGraphics();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -32,8 +38,8 @@ const HeroUFTAnimation: React.FC = () => {
                 this.y = Math.random() * height;
                 this.vx = 0;
                 this.vy = 0;
-                this.ease = 0.1; // More responsive
-                this.friction = 0.9; // Less drag, smoother 'slide'
+                this.ease = 0.1;
+                this.friction = 0.9;
             }
 
             update() {
@@ -82,20 +88,40 @@ const HeroUFTAnimation: React.FC = () => {
             tempCanvas.width = width;
             tempCanvas.height = height;
 
-            tctx.fillStyle = 'white';
-            tctx.textAlign = 'center';
-            tctx.textBaseline = 'middle';
-            // Adjusted size for Hero section
-            const fontSize = Math.min(width, height) * 0.6;
-            tctx.font = `bold ${fontSize}px Impact, sans-serif`;
-            tctx.fillText('UFT', width / 2, height / 2);
+            if (!imageSrc) {
+                console.error('HeroUFTAnimation: imageSrc is required');
+                return;
+            }
 
+            // Load and draw image
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+                // Calculate scaling to fit container
+                const scale = Math.min(width / img.width, height / img.height) * 0.8;
+                const scaledWidth = img.width * scale;
+                const scaledHeight = img.height * scale;
+                const x = (width - scaledWidth) / 2;
+                const y = (height - scaledHeight) / 2;
+
+                tctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+                processImageData(tctx);
+            };
+            img.onerror = () => {
+                console.error('Failed to load image:', imageSrc);
+            };
+            img.src = imageSrc;
+        };
+
+        const processImageData = (tctx: CanvasRenderingContext2D) => {
             const imgData = tctx.getImageData(0, 0, width, height).data;
             const textPoints = [];
 
-            // Step size 6 for better performance in React environment
-            for (let y = 0; y < height; y += 6) {
-                for (let x = 0; x < width; x += 6) {
+            // Quality-based sampling
+            const step = quality === 'low' ? 16 : quality === 'medium' ? 8 : 4;
+
+            for (let y = 0; y < height; y += step) {
+                for (let x = 0; x < width; x += step) {
                     if (imgData[(y * width + x) * 4 + 3] > 128) {
                         textPoints.push({ x, y });
                     }
@@ -113,18 +139,21 @@ const HeroUFTAnimation: React.FC = () => {
                 particles[i].update();
                 particles[i].draw();
 
-                // Draw lines between nearby particles
-                for (let j = i + 1; j < Math.min(i + 5, particles.length); j++) {
-                    let dx = particles[i].x - particles[j].x;
-                    let dy = particles[i].y - particles[j].y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 30) {
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist / 30})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
+                // Disable lines on low quality for performance
+                if (quality !== 'low') {
+                    const lineLimit = 3;
+                    for (let j = i + 1; j < Math.min(i + lineLimit, particles.length); j++) {
+                        let dx = particles[i].x - particles[j].x;
+                        let dy = particles[i].y - particles[j].y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 30) {
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${1 - dist / 30})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
                     }
                 }
             }
@@ -138,20 +167,26 @@ const HeroUFTAnimation: React.FC = () => {
         };
 
         const handleTouchMove = (e: TouchEvent) => {
-            if (e.touches.length > 0) {
+            // Safety check for touches
+            if (e.touches && e.touches.length > 0) {
                 const rect = canvas.getBoundingClientRect();
                 mouse.x = e.touches[0].clientX - rect.left;
                 mouse.y = e.touches[0].clientY - rect.top;
             }
         };
 
+        // Debounce resize to prevent freeze during window adjust
+        let resizeTimeout: ReturnType<typeof setTimeout>;
         const handleResize = () => {
-            setup();
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                setup();
+            }, 200);
         };
 
         window.addEventListener('resize', handleResize);
         window.addEventListener('mousemove', handleMouseMove);
-        window.addEventListener('touchmove', handleTouchMove);
+        window.addEventListener('touchmove', handleTouchMove, { passive: false });
 
         setup();
         animate();
@@ -161,8 +196,9 @@ const HeroUFTAnimation: React.FC = () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('touchmove', handleTouchMove);
             cancelAnimationFrame(animationFrameId);
+            clearTimeout(resizeTimeout);
         };
-    }, []);
+    }, [quality]);
 
     return (
         <div className="w-full h-full min-h-[300px] flex items-center justify-center overflow-visible">

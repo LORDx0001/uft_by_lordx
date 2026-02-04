@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
+import { useGraphics } from '../contexts/GraphicsContext';
 
 const HeroAnimation: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { quality } = useGraphics();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -61,9 +63,11 @@ const HeroAnimation: React.FC = () => {
 
         const createStreams = () => {
             streams = [];
-            const count = Math.ceil(width / 15); // Increased density (decreased spacing)
+            // Quality-based stream density
+            const spacing = quality === 'low' ? 25 : quality === 'medium' ? 18 : 15;
+            const count = Math.ceil(width / spacing);
             for (let i = 0; i < count; i++) {
-                streams.push(createStream(i * 15 + Math.random() * 8));
+                streams.push(createStream(i * spacing + Math.random() * 8));
             }
         };
 
@@ -208,7 +212,7 @@ const HeroAnimation: React.FC = () => {
             window.removeEventListener('mousemove', handleMouseMove);
             cancelAnimationFrame(animationFrameId);
         };
-    }, []);
+    }, [quality]);
 
     return (
         <canvas

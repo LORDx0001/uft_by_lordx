@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import HeroAnimation from "./HeroAnimation";
 import HeroUFTAnimation from "./HeroUFTAnimation";
 import Skeleton from "./Skeleton";
+import logoWhite from "../../assets/logo-white.png";
 
 type BannerType = {
   id: string;
@@ -164,7 +165,7 @@ const Hero = () => {
 
         <div className="hidden md:flex md:w-2/3 justify-end items-center animate-fade-in-up z-10 pointer-events-none md:pointer-events-auto -mr-20" style={{ animationDelay: "0.4s" }}>
           <div className="w-full h-[600px]">
-            <HeroUFTAnimation />
+            <HeroUFTAnimation imageSrc={logoWhite} />
           </div>
         </div>
       </div>
